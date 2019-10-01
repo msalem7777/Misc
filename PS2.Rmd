@@ -1,0 +1,244 @@
+---
+title: "PS2_Regression & Anova"
+author: "Mohamed Salem"
+date: "September 29, 2019"
+output: pdf_document
+geometry: margin=1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,fig.height = 4.4, fig.width = 6, fig.align = 'center')
+```
+
+```{r , echo=F,results='hide', collapse=TRUE, include=FALSE}
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(formatR))
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+```{r , echo=T, include=T}
+#Entering the Data
+x<-c(1,0,2,0,3,1,0,1,2,0)
+X <- cbind(1,x)
+y<-c(16,9,17,12,22,13,8,15,19,11)
+
+#Q1a
+n <- length(y)
+xtxi<-solve(t(X)%*%X)
+beta <- xtxi%*%t(X)%*%y
+vhat <- (t(y-X%*%beta)%*%(y-X%*%beta))/(n-2)
+Vbeta <- c((vhat/n)+(vhat*(mean(x)^2))/(t(x-mean(x))%*%(x-mean(x))), (vhat/(t(x-mean(x))%*%(x-mean(x)))))
+SEbeta <- c(sqrt(Vbeta[1]), sqrt(Vbeta[2]))
+plot(x,y)
+abline(a = beta[1], b = x*beta[2], col="red")
+```
+
+A linear function appears to be a good fit from looking at the plot.\newpage
+
+```{r , echo=T, include=T}
+#Q1b
+beta[1] + 1*beta[2]
+```
+
+At X = 1, we estiate Y = 14.2
+
+```{r , echo=T, include=T}
+#Q1c
+beta[1] + 2*beta[2] - beta[1] + 1*beta[2]
+```
+
+We estimate the increase to be 12.
+
+```{r , echo=T, include=T}
+#Q1d
+beta[1] + mean(x)*beta[2]
+```
+$$
+At \; x = \bar x\;, \;y = \bar y
+$$
+
+```{r , echo=T, include=T}
+#Q2a
+#manual confint
+tv<-qt(0.975,n-2)
+cilow.beta1<-beta[2]-tv*SEbeta[2]
+ciupp.beta1<-beta[2]+tv*SEbeta[2]
+print(paste(round(cilow.beta1,2),round(ciupp.beta1,2)))
+```
+
+Our interval estimate says that 95% of the time the true $\hat\beta_{1}$ will lie within these bounds.
+
+
+```{r , echo=T, include=T}
+#Q2b
+t <- as.numeric(beta[2])/(SEbeta[2])
+tvq2b <- qt(0.975,n-2)
+print(paste('pvalue =', pt(t,df=n-2, lower.tail = F)*2, "t* =",round(t,2), '> t-crit =', round(tvq2b,2)))
+```
+$$
+H_{0}: \hat\beta_{1} = 0\\
+$$
+$$
+H_{a}: \hat\beta_{1} \neq 0\\
+$$
+$$
+reject \; H_{0} \;if \quad\lvert t^{*} \rvert \;>\;  t_{n-2,\;\alpha/2}\\
+$$
+In our case we reject the null hypothesis and conclude that we cannot deny the existence of a linear relationship.
+
+```{r , echo=T, include=T}
+#Q2c
+tvq2c<-qt(0.95,n-2)
+print(paste('pvalue =', pt(t,df=n-2, lower.tail = F), "t* =",round(t,2), '> t-crit =', round(tvq2c,2)))
+```
+$$
+H_{0}: \hat\beta_{1} \le 0\\
+$$
+$$
+H_{a}: \hat\beta_{1} > 0\\
+$$
+$$
+reject \;H_{0} \;if \;\;t^{*} >  t_{n-2,\;\alpha}\\
+$$
+
+In our case we reject the null hypothesis and conclude that we cannot deny the lack of a POSTIVE linear relationship.
+
+```{r , echo=T, include=T}
+#Q2d
+cilow.beta0<-beta[1]-tv*SEbeta[1]
+ciupp.beta0<-beta[1]+tv*SEbeta[1]
+print(paste(round(cilow.beta0,2),round(ciupp.beta0,2)))
+```
+
+Our interval estimate says that 95% of the time the true $\hat\beta_{0}$ will lie within these bounds.
+
+
+```{r , echo=T, include=T}
+#Q2e
+tvq2e<-qt(0.975,n-2)
+tq2e <- (as.numeric(beta[1])-9)/(SEbeta[1])
+print(paste('pvalue =', pt(tq2e,df=n-2, lower.tail = F), "t* =",round(tq2e,2), '< t-crit =', round(tvq2e,2)))
+```
+$$
+H_{0}: \hat\beta_{0} \le 9\\
+$$
+$$
+H_{a}: \hat\beta_{0} > 9\\
+$$
+$$
+reject \;H_{0} \;if \;\;t^{*} >  t_{n-2,\;\alpha}\\
+$$
+In our case we fail to reject the null hypothesis and conclude that we cannot deny that broken ampules should not exceed 9 when no transfers are made
+
+```{r , echo=T, include=T}
+#Q3a - (2)
+xnew<-data.frame(c(2,4))
+ynew<-beta[1]+beta[2]*xnew[1,1]
+alpha<-0.01
+tv<-qt(1-(alpha/2),10-2)
+varey<-vhat*((1/n)+((xnew[1,1]-mean(x)^2)/sum((x-mean(x))^2)))
+cilow.ey<-ynew-tv*sqrt(varey)
+ciupp.ey<-ynew+tv*sqrt(varey)
+print(paste(round(cilow.ey,2),round(ciupp.ey,2)))
+```
+
+We estimate that mean breakage conditional on X=2 will 99% of the time be between the above presented upper and lower bounds.
+
+```{r , echo=T, include=T}
+#Q3a - (4)
+ynew<-beta[1]+beta[2]*xnew[2,1]
+varey<-vhat*((1/n)+((xnew[2,1]-mean(x)^2)/sum((x-mean(x))^2)))
+cilow.ey<-ynew-tv*sqrt(varey)
+ciupp.ey<-ynew+tv*sqrt(varey)
+print(paste(round(cilow.ey,2),round(ciupp.ey,2)))
+```
+
+We estimate that mean breakage conditional on X=4 will 99% of the time be between the above presented upper and lower bounds.
+
+```{r , echo=T, include=T}
+#Q3b
+xnew<-data.frame(c(2))
+ynew<-beta[1]+beta[2]*xnew
+alpha <- 0.01
+tv<-qt(1-(alpha/(2)),10-2)
+varynew<-vhat*((1/n)+((xnew-mean(x)^2)/sum((x-mean(x))^2))+1)
+cilow.ey<-(ynew-tv*sqrt(varynew))
+ciupp.ey<-(ynew+tv*sqrt(varynew))
+print(paste(round(cilow.ey,2),round(ciupp.ey,2)))
+```
+
+We estimate that breakage conditional on X=2 will 99% of the time be between the above presented upper and lower bounds.
+
+```{r , echo=T, include=T}
+#Q3c
+xnew<-data.frame(c(2))
+ynew<-beta[1]+beta[2]*xnew
+alpha = 0.01
+m <- 3 #no. of independent shipments
+tv<-qt(1-(alpha/(2)),10-2)
+varynew<-vhat*((1/n)+((xnew-mean(x)^2)/sum((x-mean(x))^2))+(1/m))
+cilow.ey<-m*(ynew-tv*sqrt(varynew))
+ciupp.ey<-m*(ynew+tv*sqrt(varynew))
+print(paste(round(cilow.ey,2),round(ciupp.ey,2)))
+```
+
+We estimate that 99% of the time, breakage among the three shipments will be between the bounds displayed above.
+
+```{r , echo=T, include=T}
+#Q4a
+anv_mat<-data.frame(matrix(NA, nrow = 2, ncol = 6))
+names(anv_mat) <- c("", "Df", "Sum Sq", "Mean Sq", "F-Value", "Pr(>F)")
+anv_mat[1,1]<-"x"
+anv_mat[2,1]<-"Residuals"
+anv_mat[1,2]<- 2-1
+anv_mat[2,2]<- n-2
+anv_mat[1,3]<- t(y - mean(y))%*%(y - mean(y)) - t(y-X%*%beta)%*%(y-X%*%beta)
+anv_mat[2,3]<- t(y-X%*%beta)%*%(y-X%*%beta)
+anv_mat[1,4]<- anv_mat[1,3]/anv_mat[1,2]
+anv_mat[2,4]<- anv_mat[2,3]/anv_mat[2,2]
+anv_mat[1,5]<- anv_mat[1,4]/anv_mat[2,4]
+anv_mat[2,5]<- ""
+anv_mat[1,6]<- 1-pf(as.numeric(anv_mat[1,5]), anv_mat[1,2], anv_mat[2,2])
+anv_mat[2,6]<- ""
+print(anv_mat)
+```
+
+The Sum of Squares for the regression term is additive with the Sum of Squares for the residuals.
+
+```{r , echo=T, include=T}
+#Q4b
+C <- t(c(0,1))
+A_one <- X%*%xtxi%*%t(C)%*%solve(C%*%xtxi%*%t(C))%*%C%*%xtxi%*%t(X)
+Fstatistic <- (t(y)%*%A_one%*%y)/vhat
+Fstar <- t(X%*%beta - mean(y))%*%(X%*%beta - mean(y))/vhat
+Fcrit <- qf(0.95, 1, n-2)
+Fpvalue <- 1-pf(Fstar, 1, n-2)
+print(paste('pvalue =', Fpvalue, "F* =",round(Fstar,2), '> F-crit =', round(Fcrit,2)))
+```
+
+$$
+H_{0}: c\hat\beta = 0   \\
+$$
+$$
+H_{a}: c\hat\beta \neq 0   \\
+$$
+$$
+reject \;H_{0} \;if \;\;F^{*} >  F_{1,\;n-2}  \\
+$$
+
+In our case we reject the null hypothesis and conclude that we cannot deny the existence of a linear association.
+```{r , echo=T, include=T}
+#Q4c
+tstatistic <- beta[2]/SEbeta[2]
+Tpvalue <- (1-pt(tstatistic,n-2))*2
+
+print(paste("F-statistic:",Fpvalue, "T-statistic:",Tpvalue))
+```
+```{r , echo=T, include=T}
+#Q4d
+corrcoef <- cov(X[,2],y)/(sd(X[,2])*sd(y))
+Detcoeff <- corrcoef^2
+print(Detcoeff)
+```
+
+We can see that approximately 90% of the variation in Y is accounted for by introducing X.
