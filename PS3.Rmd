@@ -1,0 +1,201 @@
+---
+title: "PS3_Regression & Anova"
+author: "Mohamed Salem"
+date: "October 13, 2019"
+output: pdf_document
+geometry: margin=1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,fig.height = 4.4, fig.width = 6, fig.align = 'center')
+```
+
+```{r , echo=F,results='hide', collapse=TRUE, include=FALSE}
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(formatR))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(Matrix))
+suppressPackageStartupMessages(library(lmtest))
+suppressPackageStartupMessages(library(car))
+```
+
+```{r , echo=T, include=T}
+#Entering the Data
+i <- c(1:10)
+x <- c(0:9)
+X <- cbind(rep(x = 1,10),x)
+y <- c(98,135,162,178,221,232,283,300,374,395)
+plot(X[,2],y)
+```
+
+```{r , echo=T, include=T}
+#Q1
+n <- length(y)
+xtxi<-solve(t(X)%*%X)
+beta <- xtxi%*%t(X)%*%y
+vhat <- (t(y-X%*%beta)%*%(y-X%*%beta))/(n-length(xtxi[,1]))
+Vbeta <- c((vhat/n)+(vhat*(mean(x)^2))/(t(x-mean(x))%*%(x-mean(x))), (vhat/(t(x-mean(x))%*%(x-mean(x)))))
+SEbeta <- c(sqrt(Vbeta[1]), sqrt(Vbeta[2]))
+plot(x,y)
+abline(a = beta[1], b = beta[2], col="red")
+y_hat <- beta[1] + x*beta[2]
+res_vec <- y - y_hat
+plot(x,res_vec, main = "Residual Plot")
+```
+Visually examining the scatterplot indicates that a linear relationship may exist between X & Y, and since we have no duplicates in our data, we are unable to perform an ANOVA test for linear lack of fit. Therefore we do not have compelling evidence against an assumption of linearity. Next we'll sequentially examine each of assumptions associated with fitting a linear model. We begin by using the least squares method to fit a simple linear regression line to the data:
+
+We notice that there seems to be some increase in the variability of the residuals in the value of the predictor variable x. This may indicate a violation of the linear model's constant variance assumption. To verify that, we'll apply both the Breusch-Pagan, and Brown-Forsythe tests for constant variance.
+
+```{r , echo=T, include=T}
+sqres <- res_vec^2
+delta <- xtxi%*%t(X)%*%sqres
+ss_resreg <- sum((delta[1] + x*delta[2] - mean(sqres))^2)
+ss_resreg_df <- length(xtxi[,1])-1
+ss_reserr <- sum((sqres - delta[1] - x*delta[2])^2)
+ss_reserr_df <- n - length(xtxi[,1])
+bp_stat <- (ss_resreg/ss_resreg_df)/(ss_reserr/ss_reserr_df)
+pf(bp_stat, ss_resreg_df, ss_reserr_df, lower.tail = F)
+```
+
+The Breusch-Pagan test performed indicates against the existence of heteroskedasticity. We will carry out another test, the Brown-Forsythe test, for further verification:
+
+```{r , echo=T, include=T}
+#First we divide our data into groups
+res_vec_low <- subset(res_vec, res_vec <= median(res_vec))
+res_vec_high <- subset(res_vec, res_vec > median(res_vec))
+ng1 <- length(res_vec_low)
+ng2 <- length(res_vec_high)
+mrl <- median(res_vec_low)
+mrh <- median(res_vec_high)
+dg1 <- abs(res_vec_low - mrl)
+dg2 <- abs(res_vec_high - mrh)
+sbf <- (sum((dg1 - mean(dg1))^2) + sum((dg2 - mean(dg2))^2))/(n-2)
+tbf <- (mean(dg1) - mean(dg2))/(sqrt(sbf)*sqrt(1/ng1 + 1/ng2))
+xbf <- data.frame(cbind(as.numeric(X[,2]),as.character(rep(c(1,2), each =5))))
+xbf$X1 <- as.numeric(xbf$X1)
+pt(tbf,df=n-2, lower.tail = F)*2
+```
+
+The Brown-Forsythe test also provides evidence against non-constant variance, therefore we will go ahead and assume that the constant variance assumption holds.
+
+Next we will test the assumption that the error terms are independent and randomly distributed. For this assumption, since our data is collected over ten years, it may have time dependence. This allows us to use the Durbin-Watson test to check for autocorrelation in the error terms.
+
+```{r , echo=T, include=T}
+dw <- sum((diff(res_vec))^2)/sum(sqres)
+```
+From the Durbin-Watson critical values table, we conclude that our data offers evidence against autocorrelation of the error terms. 
+
+Finally, we take a look at the Normality of the Residuals assumption, we do this in two ways, first, by using a Normal QQ plot; and second, by doing a Shapiro-Wilks test:
+
+```{r , echo=T, include=T}
+qqnorm(res_vec, ylab="Residuals")
+qqline(res_vec)
+```
+The Normal QQ plot shows that the data may have a thinner left tail than we would observe in a standard normal distribution. Carrying out the Shapiro-Wilk test yields:
+
+```{r , echo=T, include=T}
+#Importing the Shapiro-Wilk coefficients for a sample of size n = 10
+a <- c(-0.5739, -0.3291, -0.2141, -0.1224, -0.0399, 0.0399, 0.1224, 0.2141, 0.3291, 0.5739)
+w <- sort(res_vec)
+sw <- (sum(a*(w-mean(w)))^2)/(sum((w - mean(w))^2))
+```
+Our Shapiro-Wilk test statistic is very close to 1, offering evidence against non-normality.
+
+```{r , echo=T, include=T}
+#Entering the Data
+x<-c(1,0,2,0,3,1,0,1,2,0)
+X <- cbind(1,x)
+y<-c(16,9,17,12,22,13,8,15,19,11)
+
+#Q1a
+n <- length(y)
+xtxi<-solve(t(X)%*%X)
+beta <- xtxi%*%t(X)%*%y
+vhat <- (t(y-X%*%beta)%*%(y-X%*%beta))/(n-2)
+Vbeta <- c((vhat/n)+(vhat*(mean(x)^2))/(t(x-mean(x))%*%(x-mean(x))), (vhat/(t(x-mean(x))%*%(x-mean(x)))))
+SEbeta <- c(sqrt(Vbeta[1]), sqrt(Vbeta[2]))
+```
+
+```{r , echo=T, include=T}
+#Q2a
+#manual confint
+tv<-qt(0.975,n-2)
+cilow.beta1<-beta[2]-tv*SEbeta[2]
+ciupp.beta1<-beta[2]+tv*SEbeta[2]
+print(paste(round(cilow.beta1,2),round(ciupp.beta1,2)))
+```
+
+Since our data has multiple duplicates, we can use the ANOVA linear lack of fit test to test for a linear relationship. We also report the F-statistic and its associated p-value for the proposed linear model.
+
+```{r , echo=T, include=T}
+#we begin by sorting our data to easily identify duplicates
+anv_dat <- data.frame(cbind(y,X))
+anv_dat <- arrange(anv_dat, anv_dat$x)
+anv_dat$y_hat <- beta[1]+beta[2]*anv_dat$x
+ssr_lof <- sum((mean(anv_dat$y[anv_dat$x==0])-anv_dat$y_hat[anv_dat$x==0])^2)+sum((mean(anv_dat$y[anv_dat$x==1])-anv_dat$y_hat[anv_dat$x==1])^2)+sum((mean(anv_dat$y[anv_dat$x==2])-anv_dat$y_hat[anv_dat$x==2])^2)+sum((mean(anv_dat$y[anv_dat$x==3])-anv_dat$y_hat[anv_dat$x==3])^2)
+sst_pe <- sum((mean(anv_dat$y[anv_dat$x==0])-anv_dat$y[anv_dat$x==0])^2)+sum((mean(anv_dat$y[anv_dat$x==1])-anv_dat$y[anv_dat$x==1])^2)+sum((mean(anv_dat$y[anv_dat$x==2])-anv_dat$y[anv_dat$x==2])^2)+sum((mean(anv_dat$y[anv_dat$x==3])-anv_dat$y[anv_dat$x==3])^2)
+sse_anv <- sum((anv_dat$y[anv_dat$x==0]-anv_dat$y_hat[anv_dat$x==0])^2)+sum((anv_dat$y[anv_dat$x==1]-anv_dat$y_hat[anv_dat$x==1])^2)+sum((anv_dat$y[anv_dat$x==2]-anv_dat$y_hat[anv_dat$x==2])^2)+sum((anv_dat$y[anv_dat$x==3]-anv_dat$y_hat[anv_dat$x==3])^2)
+fstat <- (ssr_lof/(length(unique(anv_dat$x))-length(xtxi[,1])))/(sst_pe/(n - length(unique(anv_dat$x))))
+pf(fstat, (length(unique(anv_dat$x))-length(xtxi[,1])), (n - length(unique(anv_dat$x))), lower.tail = F)
+```
+Based on our ANOVA linear lack of fit test, we fail to reject the null hypothesis of a linear fit. 
+
+
+```{r , echo=T, include=T}
+#Q3c
+xnew<-data.frame(c(2))
+ynew<-beta[1]+beta[2]*xnew
+alpha = 0.01
+m <- 3 #no. of independent shipments
+tv<-qt(1-(alpha/(2)),n-2)
+varynew<-vhat*((1/n)+((xnew-mean(x)^2)/sum((x-mean(x))^2))+(1/m))
+cilow.ey<-m*(ynew-tv*sqrt(varynew))
+ciupp.ey<-m*(ynew+tv*sqrt(varynew))
+print(paste(round(cilow.ey,2),round(ciupp.ey,2)))
+```
+
+We estimate that 99% of the time, breakage among the three shipments will be between the bounds displayed above.
+
+```{r , echo=T, include=T}
+#Q4a
+anv_mat<-data.frame(matrix(NA, nrow = 2, ncol = 6))
+names(anv_mat) <- c("", "Df", "Sum Sq", "Mean Sq", "F-Value", "Pr(>F)")
+anv_mat[1,1]<-"x"
+anv_mat[2,1]<-"Residuals"
+anv_mat[1,2]<- 2-1
+anv_mat[2,2]<- n-2
+anv_mat[1,3]<- t(y - mean(y))%*%(y - mean(y)) - t(y-X%*%beta)%*%(y-X%*%beta)
+anv_mat[2,3]<- t(y-X%*%beta)%*%(y-X%*%beta)
+anv_mat[1,4]<- anv_mat[1,3]/anv_mat[1,2]
+anv_mat[2,4]<- anv_mat[2,3]/anv_mat[2,2]
+anv_mat[1,5]<- anv_mat[1,4]/anv_mat[2,4]
+anv_mat[2,5]<- ""
+anv_mat[1,6]<- 1-pf(as.numeric(anv_mat[1,5]), anv_mat[1,2], anv_mat[2,2])
+anv_mat[2,6]<- ""
+print(anv_mat)
+```
+
+The Sum of Squares for the regression term is additive with the Sum of Squares for the residuals.
+
+```{r , echo=T, include=T}
+#Q4b
+C <- t(c(0,1))
+A_one <- X%*%xtxi%*%t(C)%*%solve(C%*%xtxi%*%t(C))%*%C%*%xtxi%*%t(X)
+Fstatistic <- (t(y)%*%A_one%*%y)/vhat
+Fstar <- t(X%*%beta - mean(y))%*%(X%*%beta - mean(y))/vhat
+Fcrit <- qf(0.95, 1, n-2)
+Fpvalue <- 1-pf(Fstar, 1, n-2)
+print(paste('pvalue =', Fpvalue, "F* =",round(Fstar,2), '> F-crit =', round(Fcrit,2)))
+```
+
+$$
+H_{0}: c\hat\beta = 0   \\
+$$
+$$
+H_{a}: c\hat\beta \neq 0   \\
+$$
+$$
+reject \;H_{0} \;if \;\;F^{*} >  F_{1,\;n-2}  \\
+$$
+
+In our case we reject the null hypothesis and conclude that we cannot deny the existence of a linear association.
