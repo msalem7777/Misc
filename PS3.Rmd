@@ -1,12 +1,16 @@
 ---
-title: "PS3_Regression & Anova"
-author: "Mohamed Salem"
-date: "October 13, 2019"
+title: "Regression and Anova"
+subtitle: "Problem Set 3"
+author: Mohamed Salem
+abstract: \begin{flushleft} \begin{minipage}{0.89\linewidth} This paper takes a look at the assumptions underlying the simple linear regression model. Assumptions are examined sequentially and are often followed by statistical tests to verify their non-violatio in the presented case study. We find that, for the given case, the assumptions of our linear model hold, and we can confidently fit a linear model to represent the relationship between our independent variable and our response variable.\end{minipage}\end{flushleft}
+date: 
 output:
   pdf_document: default
   html_document:
     df_print: paged
 geometry: margin=1in
+fontsize: 10pt
+mainfont: Helvetica
 ---
 
 ```{r setup, include=FALSE}
@@ -22,44 +26,59 @@ suppressPackageStartupMessages(library(lmtest))
 suppressPackageStartupMessages(library(car))
 suppressPackageStartupMessages(library(kableExtra))
 ```
-Introduction
-
+\vspace{0.2cm}
+\begin{Large}
+\textbf{Introduction:}
+\end{Large}
+\vspace{0.2cm}
 Throughout this work, we will be examining the properties and workings of the simple linear regression model. More specifically, we will construct multiple small datasets, and fit our simple linear model to those datasets. Along the way, we will examine the assumptions underlying the simple linear model, and test for whether or not these assumptions hold. We will present a number of tests, describing how they work, how to apply them and their associated hypotheses. Should any of our model assumptions be violated, we will also show how to remedy such violations. This work is presented in the form of four problems. The problems have some overlapping elements such as the model used. Notation will be consistent throughout this work.
-
-Problem# 1
-
+\vspace{0.2cm}
+\begin{Large}
+\textbf{Model and Methodology:}
+\end{Large}
+\vspace{0.2cm}
+\begin{large}
+\underline{\textbf{Problem 1:}}
+\end{large}
+\vspace{0.2cm}
 We begin by constructing a dataset representing annual sales of a product over 10 years, notice that there is an element of time in this problem. The data is as follows:
-
-```{r , echo=T, include=T}
-#creating a nice looking table 
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#creating a nice looking table and entering our data
 x <- c(0:9)
 X <- cbind(rep(x = 1,10),x)
 y <- c(98,135,162,178,221,232,283,300,374,395)
 dtatbl <- data.frame(rbind(x,y))
 names(dtatbl) <- c("t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10")
 tbl <- (kable(dtatbl))
+tbl <- kable_styling(tbl, position = "center")
 tbl <-column_spec(tbl,1, border_left = T)
 tbl <-column_spec(tbl,11, border_right = T)
+```
+
+```{r , echo=F, include=T, fig.align = 'center'}
 tbl
 ```
-
+\vspace{0.2cm}
 We first proceed by constructing a scatterplot of our data, this allows us to visually examine the relationship between our independent and response variables, and therefore we might be able to discern whether a linear model would be a good fit for the problem at hand.
-
-```{r , echo=T, include=T}
+\vspace{0.2cm}
+```{r , echo=F, include=T}
 #Scatterplot of our data
-plot(X[,2],y)
+plot(X[,2],y, xlab = 'x', main = "Scatterplot of Y on X")
 ```
-From the scatterplot, a linear assumption seems to be reasonable. However, this is only a visual test. We can be more rigorous in testing our linearity assumption using some statistical tests such as the ANOVA linear lack of fit test. We could also take a look at the residual plot, but to construct a residual plot, we first need to fit a linear model to our data. We will use the following simple linear regression model:
 
+From the scatterplot, a linear assumption seems to be reasonable. However, this is only a visual test. We can be more rigorous in testing our linearity assumption using some statistical tests such as the ANOVA linear lack of fit test. We could also take a look at the residual plot, but to construct a residual plot, we first need to fit a linear model to our data. We will use the following simple linear regression model:
+\vspace{0.2cm}
 $$
 Y_{i} = \beta_{0} + \beta_{1}.x_{i} + \epsilon_{i}
 $$
 and we will estimate our $\beta$'s by the following formulas:
-
+\vspace{0.2cm}
 $$
 \hat\beta_{[2\text{x}1]} = (X'X)^{-1}X'Y
 $$
-```{r , echo=T, include=T}
+```{r , echo=F, include=T}
+#fitting our linear model
 n <- length(y)
 xtxi<-solve(t(X)%*%X)
 beta <- xtxi%*%t(X)%*%y
@@ -69,13 +88,14 @@ SEbeta <- c(sqrt(Vbeta[1]), sqrt(Vbeta[2]))
 ```
 
 Applying the above, we estimate $\hat\beta_{0} =$ `r beta[1]` and $\hat\beta_{1} =$ `r beta[2]`. Using these estimates we can construct our residuals $e_{i}$:
-
+\vspace{0.2cm}
 $$
 e_{i} = Y - \hat Y \quad where\;\;\; \hat Y= \hat\beta_{0} + \hat\beta_{1}.x_{i}
 $$
 
-```{r , echo=T, include=T}
-plot(x,y)
+```{r , echo=F, include=T}
+#plotting a residual plot
+plot(x,y, main = "Scatter Plot w Fitted Line", ylab = "x")
 abline(a = beta[1], b = beta[2], col="red")
 y_hat <- beta[1] + x*beta[2]
 res_vec <- y - y_hat
@@ -85,20 +105,21 @@ plot(y_hat,res_vec, main = "Residual Plot", ylab = "residuals")
 abline(h=0)
 ```
 Now we have our scatterplot again, with our fitted linear model line, as well as our residual plot. Visually examining both plots indicate that a linear relationship may exist between X & Y, and since we have no duplicates in our data, we are unable to perform an ANOVA test for linear lack of fit (which requires duplication in the independent variable). Therefore we do not have compelling evidence against an assumption of linearity. 
-
+\vspace{0.2cm}
 For further measure, we will also look at the standardized and studentized residuals. Standardized residuals can be defined as:
 
 $$
 std.res = \frac{e_{i}}{\hat\sigma. \sqrt{1-h_{ii}}}
 $$
 While studentized residuals are defined as:
-
+\vspace{0.2cm}
 $$
 stu.res = std.res.\sqrt{\frac{n-p-1}{n-p-(std.res)^2}}
 $$
 Estimating and plotting our standardized residual yields the below residual plot:
-
-```{r , echo=T, include=T}
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#constructing and plotting standardized residuals
 hatmat <- X%*%xtxi%*%t(X)
 hatdiag <- diag(hatmat)
 vres <- (res_vec%*%res_vec)/(n-length(xtxi[,1]))
@@ -108,12 +129,13 @@ abline(h=0)
 ```
 
 The residual plot also shows no strong evidence for violation of the linearity assumption, we also do not have any outliers (no residuals are more than 2 standard deviations away from zero).
-
+\vspace{0.2cm}
 Next we'll sequentially examine each of the remaining assumptions associated with fitting a linear model. We continue using the linear model results to test the assumptions.
-
+\vspace{0.2cm}
 We notice from the residual plot that there seems to be some increase in the variability of the residuals in the value of the predictor variable x. This may indicate a violation of the linear model's constant variance assumption. To verify that, we'll apply both the Breusch-Pagan, and Brown-Forsythe tests for constant variance.
-
-```{r , echo=T, include=T}
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#the Breusch-Pagan test for constant variance
 sqres <- res_vec^2
 delta <- xtxi%*%t(X)%*%sqres
 ss_resreg <- sum((delta[1] + x*delta[2] - mean(sqres))^2)
@@ -127,46 +149,45 @@ pbpf <- pf(bp_stat, ss_resreg_df, ss_reserr_df, lower.tail = F)
 ```
 
 The Breusch-Pagan test was performed using two test statistics the $BP_{F}$ statistic follows an $F_{p,n-p-1}$ distribution where $p=1$, $n=10$, in our example. While the $BP_{LM}$ statistic follows a $\chi^2_{p}$ distribution. The tests yielded p-values of `r pbpf` and `r pbplm`, respectively. Both p-values indicate that we should fail to reject the null hypothesis, which in this test, represents the hypothesis of constant variance. We present the test statistics in detail below:
-
+\vspace{0.2cm}
 $$
 BP_{F} = \frac{SSReg/p}{SSRes/n-p-1} = \frac{\sum_i{(\hat e_{i}^2 - \bar e^2})^2/p}{\sum_i{(e_{i}^2 - \hat e_{i}^2})^2/n-p-1}
 $$
 
 Where $\hat e_{i}^2$ is obtained from the below linear model:
-
+\vspace{0.2cm}
 $$
 e_{i}^2 = \delta_{0} + \delta_{1}.x_{i} + \xi_{i}
 $$
 While for the $BP_{LM}$ statistic we have:
-
+\vspace{0.2cm}
 $$
 BP_{LM} = n.\frac{SSReg}{SST} = n.R^{2} 
 $$
 Where the hypotheses are:
-
+\vspace{0.2cm}
 $$
 H_{0}: constant\;variance
 $$
-
 $$
 H_{a}: non-constant\;variance
 $$
 We will carry out another test, the Brown-Forsythe test, for further verification, where the BF test statistic is:
-
+\vspace{0.2cm}
 $$
 t_{BF} = \frac{\bar d_{1} - \bar d_{2}}{s.\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}
 $$
 
 Where we have separated our residuals into two groups, each group containing the residuals that are closest to each other and farthest from the residuals in the other group. $\bar d_{1}$ and $\bar d_{2}$ represent the mean distances from the median for the values of these two groups. Next, we computed the median of each group and found the distances from the respective median for each observation, we also use the mean distance to find the sum of squared differences between distance from the median and average distance from the median, for each group.We used those sum of squared distances to compute a pooled variance estimate as follows:
-
+\vspace{0.2cm}
 $$
 s^2 = \frac{\sum_i(d_{i1} - \bar d_{1})^2+\sum_i(d_{i2} - \bar d_{2})^2}{n-p-1}
 $$
 
 
 
-```{r , echo=T, include=T}
-#First we divide our data into groups
+```{r , echo=F, include=T}
+#The Brown-forsythe test for constant variance
 res_vec_low <- res_mat$res_vec[1:5]
 res_vec_high <- res_mat$res_vec[6:10]
 rvl_mat <- data.frame(cbind(res_vec_low,1))
@@ -183,42 +204,38 @@ dg1 <- abs(res_vec_low - mrl)
 dg2 <- abs(res_vec_high - mrh)
 sbf <- (sum((dg1 - mean(dg1))^2) + sum((dg2 - mean(dg2))^2))/(n-2)
 tbf <- (mean(dg1) - mean(dg2))/(sqrt(sbf)*sqrt(1/ng1 + 1/ng2))
-  if (tbf >0) {
-    bftstat <- pt(tbf,n-2, lower.tail = F)*2
-  } else {
-    bftstat <- pt(tbf,n-2, lower.tail = T)*2
-  }
-leveneTest(lm(residuals ~ group, data = rv_mat))
+bftstat <- pt(abs(tbf),n-2, lower.tail = F)*2
 ```
 
 The Brown-Forsythe test also provides evidence against non-constant variance, where we observe a p-value of `r bftstat` which supports the null hypothesis of constant variance; therefore we will go ahead and assume that the constant variance assumption holds.
-
+\vspace{0.2cm}
 Next we will test the assumption that the error terms are independent and randomly distributed. For this assumption, since our data is collected over ten years, it may have time dependence as we noted earlier. This allows us to use the Durbin-Watson test to check for autocorrelation in the error terms. Our Durbin-Watson test statistic is constructed as follows:
-
+\vspace{0.2cm}
 $$
 DW = \frac{\sum_{t}(e_{t} - e_{t-1})^2}{\sum_{t} e_{t}^2}
 $$
 
-```{r , echo=T, include=T}
+```{r , echo=F, include=T}
+#the Durbin-Watson test for autocorrelation of the error terms
 dw <- sum((diff(res_vec))^2)/sum(sqres)
 ```
 Comparing our Durbin-Watson test statistic value of `r dw` to the Durbin-Watson critical values table, we conclude that our data offers evidence against autocorrelation of the error terms, where our hypothesis are as follows:
-
+\vspace{0.2cm}
 $$
 H_{0}: No\;autocorrelation\;
 $$
-
 $$
 H_{a}: Autocorrelation\;
 $$
 
-We can also use a version of the Runs test, to test that our errors are randomly distributed. To do that we will start by sorting our residuals along with their associated fitted vlue. The Runs test is a non-parametric test that observes only binary outcomes. For that reason, we will check whether we randomly observe different signs for our residuals. Our test statistics are:
-
-$r$: the number of runs
-$r_{+}$: the number of positive values
-$r_{-}$: the number of positive values
-
-```{r , echo=T, include=T}
+We can also use a version of the Runs test, to test that our errors are randomly distributed. To do that we will start by sorting our residuals along with their associated fitted vlue. The Runs test is a non-parametric test that observes only binary outcomes. For that reason, we will check whether we randomly observe different signs for our residuals. Our test statistics are:\newline
+\newline
+$r$: the number of runs\newline
+$r_{+}$: the number of positive values\newline
+$r_{-}$: the number of positive values\newline
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#the Runs test for randomness of the error distribution
 runs_mat <- data.frame(cbind(res_vec, y_hat))
 runs_mat <- arrange(runs_mat, y_hat)
 r = 1
@@ -242,47 +259,50 @@ for (i in seq(1,length(res_vec), by = 1)) {
 ```
 
 Since we have  small sample size of 10, we will compare our Runs test statistic r = `r r`, with the appropriate critical values in the Runs test table. We note that if we had a large enough sample size (greater than 20), we would have constructed a standardized test statistic using r, which approximately follows a standard normal distribution. From the table, our lower critical value $r_{L}$ is 2; our upper critical value $r_{U}$ is 10. Since our test statistic r is between these two values we fail to reject the null hypothesis, where our hypotheses are as follows:
-
+\vspace{0.2cm}
 $$
 H_{0}: Residual\;signs\;are\;randomly\;distributed\;
 $$
-
 $$
 H_{a}: Residual\;signs\;are\;not\;randomly\;distributed\;
 $$
 
 Finally, we take a look at the Normality of the Residuals assumption, we do this in two ways, first, by using a Normal QQ plot; and second, by doing a Shapiro-Wilk test. Our Shapiro-Wilk test statistic is:
-
+\vspace{0.2cm}
 $$
 SW = \frac{\sum_{i}(a_{i}.e_{i})^2}{\sum_{i}e_{i}^{2}}
 $$
 where the $a_{i}$ represent prespecified Shapiro-Wilk coefficients.
-
-```{r , echo=T, include=T}
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#Normal QQ plot for the residuals
 qqnorm(res_vec, ylab="Residuals")
 qqline(res_vec)
 ```
 Our Normal QQ plot shows that the data may have a thinner left tail than we would observe in a standard normal distribution. It's not easy to make a judgment about normality based on visuals alone. We carry out the Shapiro-Wilk test to see the result.
-
-```{r , echo=T, include=T}
+\vspace{0.3cm}
+```{r , echo=F, include=T}
 #Importing the Shapiro-Wilk coefficients for a sample of size n = 10
 a <- c(-0.5739, -0.3291, -0.2141, -0.1224, -0.0399, 0.0399, 0.1224, 0.2141, 0.3291, 0.5739)
 w <- sort(res_vec)
-#Computing the Shapiro-Wilk test statistic
+w2 <- sort(y)
+#Computing the Shapiro-Wilk test statistic for the residuals and for Y
 sw <- (sum(a*(w-mean(w)))^2)/(sum((w - mean(w))^2))
+sw2 <- (sum(a*(w2-mean(w2)))^2)/(sum((w2 - mean(w2))^2))
 ```
-Our Shapiro-Wilk test statistic is very close to 1 (equal to `r round(sw,4)`, in fact), and the associated p-value is $0.80$. To understand what this means, we look at the Shapiro-Wilk test statistic. With some manipulation and the undestanding that the mean of the residuals is $0$, we can conclude that the Shapiro-Wilk test, is in essence, a correlation coefficient between residuals and a theoretical standard normal distribution, therefore, the closer the observed statistic is to one, the stronger the evidence for normality. Therefore, we fail to reject the null hypothesis of normality of our residuals. Our Shapiro-Wilk hypotheses are:
-
+Our Shapiro-Wilk test statistic is very close to 1 for both the residuals (`r round(sw,4)`) and the y values (`r round(sw2,4)`), and the associated p-values are $0.80$ and $0.77$ for the residuals and the y values, respectively. To understand what this means, we look at the Shapiro-Wilk test statistic. With some manipulation, we can conclude that the Shapiro-Wilk test, is in essence, a squared correlation coefficient between residuals (or y values) and a theoretical standard normal distribution, therefore, the closer the observed statistic is to one, the stronger the evidence for normality. Therefore, we fail to reject the null hypothesis of normality of our residuals. Our Shapiro-Wilk hypotheses are:
+\vspace{0.2cm}
 $$
 H_{0}: Residuals\;are\;from\;a\;normally\;distributed\;population
 $$
-
 $$
 H_{a}: Residuals\;are\;not\;from\;a\;normally\;distributed\;population
 $$
+\vspace{0.3cm}
 For further measure, we can also construct a histogram of our residuals to check for normality:
-
-```{r , echo=T, include=T}
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#histogram of residuals
 h <- hist(res_vec, ylim = c(0,length(res_vec)/2))
 lines(density(res_vec))
 xfit <- seq(min(res_vec), max(res_vec), length = 100) 
@@ -290,41 +310,51 @@ yfit <- dnorm(xfit, mean = mean(res_vec), sd = sd(res_vec))
 yfit <- yfit * diff(h$mids[1:2]) * length(res_vec) 
 lines(xfit, yfit, col = "black", lwd = 2)
 ```
-
-
-Finally we can make the conclusion that given the data, the evidence points towards our linear model assumptions being satisfied, and therefore a linear model seems to be a suitable method for capturing variation in the data.
-
-Problem 2:
-
+\vspace{0.2cm}
+\begin{Large}
+\textbf{Conclusion}
+\end{Large}
+\vspace{0.2cm}
+After performing a number of tests, we failed to reject the hypotheses that an assumption is not violated for any of our assumptions. We conclude that given the data, the evidence points towards our linear model assumptions being satisfied, and therefore we can confidently say that a linear model seems to be a suitable method for capturing variation in the data we are given.
+\newpage
+\begin{large}
+\underline{\textbf{Problem 2:}}
+\end{large}
+\vspace{0.2cm}
 (a) We are asked to fit a simple linear regression to the data and estimate the associated parameters. We use the estimators provided by the least squares method and we obtain the following results:
-
-```{r , echo=T, include=T}
+\vspace{0.2cm}
+```{r , echo=F, include=T}
 #Entering the Data
 x<-c(1,0,2,0,3,1,0,1,2,0)
 X <- cbind(1,x)
 y<-c(16,9,17,12,22,13,8,15,19,11)
 
-#Q1a
+#fitting the linear model
 n <- length(y)
 xtxi<-solve(t(X)%*%X)
 beta <- xtxi%*%t(X)%*%y
 vhat <- (t(y-X%*%beta)%*%(y-X%*%beta))/(n-2)
 Vbeta <- c((vhat/n)+(vhat*(mean(x)^2))/(t(x-mean(x))%*%(x-mean(x))), (vhat/(t(x-mean(x))%*%(x-mean(x)))))
 SEbeta <- c(sqrt(Vbeta[1]), sqrt(Vbeta[2]))
+y_hat <- beta[1] + x*beta[2]
+res_vecp2 <- y - y_hat
+res_matp2 <- data.frame(cbind(y,x,y_hat,res_vecp2))
+res_matp2 <- arrange(res_matp2, x)
 ```
 
-$\hat\beta_{0}=$ `r beta[1]`
-$\hat\beta_{0}=$ `r beta[2]`
+\begin{center}
+$\hat\beta_{0}=$ `r beta[1]`\\
+$\hat\beta_{1}=$ `r beta[2]`
+\end{center}
 
 where our estimator is:
-
+\vspace{0.2cm}
 $$
 \hat\beta_{[2\text{x}1]} = (X'X)^{-1}X'Y
 $$
 
-```{r , echo=T, include=T}
-#Q2a
-#manual confint
+```{r , echo=F, include=T}
+#confidence intervals
 tv<-qt(0.975,n-2)
 cilow.beta0<-beta[1]-tv*SEbeta[1]
 ciupp.beta0<-beta[1]+tv*SEbeta[1]
@@ -332,21 +362,23 @@ cilow.beta1<-beta[2]-tv*SEbeta[2]
 ciupp.beta1<-beta[2]+tv*SEbeta[2]
 ```
 
-Using the above estimates, our confidence intervals for $\beta$ are:
-
-$\beta_{0}:\;[$ `r paste(round(cilow.beta0,2)," , ",round(ciupp.beta0,2))` $]$
+Using the above estimates, our confidence intervals for $\beta$ are:\newline
+\begin{center}
+$\beta_{0}:\;[$ `r paste(round(cilow.beta0,2)," , ",round(ciupp.beta0,2))` $]$\\
 $\beta_{1}:\;[$ `r paste(round(cilow.beta1,2)," , ",round(ciupp.beta1,2))` $]$
-
+\end{center}
+\vspace{0.2cm}
 which were obtained using the formulas:
-
-$\hat\beta_{0} \pm t_{_{n-p-1,\;\alpha/2}}\sqrt{\hat\sigma^2.(\frac{1}{n} + \frac{\bar x^2}{s_{\text{xx}}})}$
-
+\vspace{0.2cm}
+\begin{center}
+$\hat\beta_{0} \pm t_{_{n-p-1,\;\alpha/2}}\sqrt{\hat\sigma^2.(\frac{1}{n} + \frac{\bar x^2}{s_{\text{xx}}})}$\\
 $\hat\beta_{1} \pm t_{_{n-p-1,\;\alpha/2}}\sqrt{\frac{\hat\sigma^2}{s_{\text{xx}}}}$
-
-(c) Since our data has multiple duplicates, we can use the ANOVA linear lack of fit test to test for a linear relationship. We also report the F-statistic and its associated p-value for the proposed linear model.
-
-```{r , echo=T, include=T}
-#we begin by sorting our data to easily identify duplicates
+\end{center}
+\vspace{0.2cm}
+(c) Assuming that our data satisfies the assumptions of independence of error terms, normal distribution of error terms, and constant variance; and since our data has multiple duplicates, we can use the ANOVA linear lack of fit test to test for the suitability of a linear model. We also report the F-statistic and its associated p-value for the proposed linear model and we carry out a t-test for $\beta_{1}$.
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#ANOVA Linear lack of fit test
 anv_dat <- data.frame(cbind(y,X))
 anv_dat <- arrange(anv_dat, anv_dat$x)
 anv_dat$y_hat <- beta[1]+beta[2]*anv_dat$x
@@ -356,8 +388,8 @@ sse_anv <- sum((anv_dat$y[anv_dat$x==0]-anv_dat$y_hat[anv_dat$x==0])^2)+sum((anv
 fstat <- (ssr_lof/(length(unique(anv_dat$x))-length(xtxi[,1])))/(sst_pe/(n - length(unique(anv_dat$x))))
 fstatp <- pf(fstat, (length(unique(anv_dat$x))-length(xtxi[,1])), (n - length(unique(anv_dat$x))), lower.tail = F)
 ```
-For our proposed ANOVA linear lack of fit test, we start by  separating our observtions into groups indexed by i, such that each individual j in the ith group has the same covariate value $X_{i}$. Next we construct our test statistics as follows:
-
+For our proposed ANOVA linear lack of fit test, we start by  separating our observations into groups indexed by i, such that each individual j in the ith group has the same covariate value $X_{i}$. Next we construct our test statistics as follows:
+\vspace{0.2cm}
 $$
 SSR_{Lack\;of\;Fit} = \sum_{i=1}^{n\;of\;groups} \sum_{j=1}^{n\;ind.\;in\;i}(\bar y_{i} - \hat y_{ij})^{2}
 $$
@@ -368,21 +400,82 @@ $$
 F_{LOF} = \frac{SSR_{LOF}/(c-p-1)}{SSPE/(n-c)} \sim F_{c-p-1,\;n-c} 
 $$
 Where c represents the number of groups. Our F-statistic here is `r fstat`, and the associated p-value is `r round(fstatp,4)`. Based on our ANOVA linear lack of fit test, we fail to reject the null hypothesis of a linear fit where our hypotheses are:
-
+\vspace{0.2cm}
 $$
 H_{0}: No\;lack\;of\;fit
 $$
-
 $$
 H_{a}: Lack\;of\;fit
 $$
+We also construct our model's regular ANOVA table:
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#ANOVA table for linear regression
+anv_mat<-data.frame(matrix(NA, nrow = 2, ncol = 6))
+names(anv_mat) <- c("", "Df", "Sum Sq", "Mean Sq", "F-Value", "Pr(>F)")
+anv_mat[1,1]<-"x"
+anv_mat[2,1]<-"Residuals"
+anv_mat[1,2]<- 2-1
+anv_mat[2,2]<- n-2
+anv_mat[1,3]<- t(y - mean(y))%*%(y - mean(y)) - t(y-X%*%beta)%*%(y-X%*%beta)
+anv_mat[2,3]<- t(y-X%*%beta)%*%(y-X%*%beta)
+anv_mat[1,4]<- anv_mat[1,3]/anv_mat[1,2]
+anv_mat[2,4]<- anv_mat[2,3]/anv_mat[2,2]
+anv_mat[1,5]<- round(anv_mat[1,4]/anv_mat[2,4],3)
+anv_mat[2,5]<- ""
+anv_mat[1,6]<- round(1-pf(as.numeric(anv_mat[1,5]), anv_mat[1,2], anv_mat[2,2]),4)
+anv_mat[2,6]<- ""
+tbl_anv <- (kable(anv_mat))
+tbl_anv <- kable_styling(tbl_anv, position = "center")
+tbl_anv <- column_spec(tbl_anv,1, border_left = T)
+tbl_anv <- column_spec(tbl_anv,6, border_right = T)
+```
+```{r echo=F, include=T}
+tbl_anv
+```
 
-Problem 3: Bootstrapping Confidence Intervals
-```{r , echo=T, include=T}
+The F-statistic presented in this table represents a comparison between the full and reduced models. Here the F-statistic is associated with a p-value very close to zero, which supports the existence of a linear relationship between x and y based on our hypotheses below:
+\vspace{0.2cm}
+$$
+H_{0}: c\hat\beta = 0   \\
+$$
+$$
+H_{a}: c\hat\beta \neq 0   \\
+$$
+$$
+reject \;H_{0} \;if \;\;F^{*} >  F_{1,\;n-p-1}  \\
+$$
+Finally, we perform a t-test on $\beta_{1}$ with the following hypothesis:
+\vspace{0.2cm}
+$$
+H_{0}: \hat\beta_{1} = 0\\
+$$
+$$
+H_{a}: \hat\beta_{1} \neq 0\\
+$$
+$$
+reject \; H_{0} \;if \quad\lvert t^{*} \rvert \;>\;  t_{n-2,\;\alpha/2}\\
+$$
+
+```{r , echo=F, include=T}
+#t-test for linear model slope coefficient
+t <- as.numeric(beta[2])/(SEbeta[2])
+tvcrit <- qt(0.975,n-2)
+tstatp <- round(pt(abs(t),df=n-2, lower.tail = F)*2,5)
+```
+\vspace{0.2cm}
+Our t-test produces a t-statistic equal to `r t`, which is greater than the critical t-value at $\alpha=0.05$ which is equal to `r tvcrit`, therefore we reject our null hypothesis of no existence of a linear relationship between x and y.
+\vspace{0.2cm}
+\begin{large}
+\underline{\textbf{Problem 3: Bootstrapping Confidence Intervals}}
+\end{large}
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#Bootstrap confidence intervals
 btstrp_mat <- data.frame(matrix(NA, nrow = 1000, ncol = 1))
 for (i in 1:1000) {
   id <- sample(1:10, 10, replace = T)
-  bs_mat <- res_mat[id,c(1:2)]
+  bs_mat <- res_matp2[id,c(1:2)]
   row.names(bs_mat) <- NULL
   x_bs <- bs_mat$x
   y_bs <- bs_mat$y
@@ -394,15 +487,18 @@ for (i in 1:1000) {
 }
 names(btstrp_mat) <- c("beta")
 cint_bs <- quantile(btstrp_mat$beta, probs = c(0.025, 0.975))
-
 ```
-We find that our bootstrap confidence interval $[$`r round(cint_bs[1],4)` , `r round(cint_bs[2],4)`$]$ is very close, although not exactly similar to to the ones obtained under the normality assumption
 
-Problem 4:
-
-We had previously both constructed and carried out the Breusch-Pagan and the Brown-Forsyth tests. We will now apply those same tests, this time, however, we will construct multiple different groups for the Brown-Forsyth test. Since the Breusch-Pagan test is independent of any grouping, we will retain the value of the BP statistic from earlier.
-
-```{r , echo=T, include=T}
+We find that our bootstrap confidence interval [`r round(cint_bs[1],3)` , `r round(cint_bs[2],3)`] is close, although not exactly similar to to the ones obtained under the normality assumption. This is due to the law of large numbers which implies that the empirical distribution obtained from the data will converge to the true distribution given a large enough sample size. This in turn implies that the distribution of parameters obtained by the bootstrap will be a good approximation for the sampling distribution of the parameter, and since the bootstrapped distribution converges in large sample size to the true distribution, the bootstrap confidence intervals will also converge to the true values. They will never be exactly the same because the empirical distribution is not exactly the same as the true distribution, but the difference will decrease as the sample size and the number of draws increases.
+\vspace{0.2cm}
+\begin{large}
+\underline{\textbf{Problem 4:}}
+\end{large}
+\vspace{0.2cm}
+We have previously checked all the linear model assumptions in \textbf{Problem 1}. We had also previously both constructed and carried out the Breusch-Pagan and the Brown-Forsyth tests. We will now apply those same tests, this time, however, we will construct multiple different groups for the Brown-Forsyth test. Since the Breusch-Pagan test is independent of any grouping, we will retain the value of the BP statistic from earlier.
+\vspace{0.2cm}
+```{r , echo=F, include=T}
+#Breusch-Pagan and Brown Forsythe tests
 bpbf_mat <- data.frame(matrix(NA, nrow = 2, ncol = 7))
 row.names(bpbf_mat) <- c("statistic", "p-value")
 names(bpbf_mat) <- c("BP", "BF1", "BF2", "BF3", "BF4", "BF5", "BF6")
@@ -429,18 +525,17 @@ for (i in 1:5) {
   dg2 <- abs(res_vec_g2 - mrh)
   sbf <- (sum((dg1 - mean(dg1))^2) + sum((dg2 - mean(dg2))^2))/(n-2)
   tbf_g <- (mean(dg1) - mean(dg2))/(sqrt(sbf)*sqrt(1/ng1 + 1/ng2))
-  if (tbf_g >0) {
-    bftstat_g <- pt(tbf_g,n-2, lower.tail = F)*2
-  } else {
-    bftstat_g <- pt(tbf_g,n-2, lower.tail = T)*2
-  }
+  bftstat_g <- pt(abs(tbf_g),n-2, lower.tail = F)*2
   bpbf_mat[1,i+2] <- tbf_g
   bpbf_mat[2,i+2] <- bftstat_g
 }
 tbl_bpbf <- (kable(bpbf_mat))
+tbl_bpbf <- kable_styling(tbl_bpbf, position = "center")
 tbl_bpbf <- column_spec(tbl_bpbf,1, border_left = T)
 tbl_bpbf <- column_spec(tbl_bpbf,8, border_right = T)
+```
+```{r , echo=F, include=T}
 tbl_bpbf
 ```
-
+\vspace{0.3cm}
 We observe that the Brown-Forsyth test yields very variable results based on the choice of group splitting rule. Our rule of thumb choice of having the groups split by value of the independent variable where low values and high values of the independent variable are grouped together, yields the closest result to the Breusch-Pagan test. For all six runs of the Brown-Forsyth tests, we obtain evidence for constant variance, which is expected since the group splitting by extreme values of the dependent variable is naturally expected to provide the greatest change in variance if variance is linearly dependent on X.
