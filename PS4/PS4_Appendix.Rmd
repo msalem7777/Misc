@@ -1,43 +1,22 @@
 ---
-title: "Regression and ANOVA"
-author: "Mohamed Salem"
-date: "October 29, 2019"
+title: \Large{Appendix}
+subtitle: \large{(Includes R codes used in the paper)}
+date: 
 output:
   pdf_document: default
-  header-includes: \usepackage[justification=raggedright,labelfont=bf,singlelinecheck=false]{caption}
   html_document:
     df_print: paged
 geometry: margin=1in
-indent: no
-mainfont: Helvetica
 fontsize: 10pt
-subtitle: Problem Set 4
-fig_caption: yes
+mainfont: Helvetica
 ---
-```{r functions, echo=FALSE, include=FALSE}
-# A function for captioning and referencing images
-fig <- local({
-    i <- 0
-    ref <- list()
-    list(
-        cap=function(refName, text) {
-            i <<- i + 1
-            ref[[refName]] <<- i
-            paste("Figure ", i, ": ", text, sep="")
-        },
-        ref=function(refName) {
-            ref[[refName]]
-        })
-})
-``` 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=70),tidy=TRUE,fig.height = 4.0, fig.width = 7, fig.align = 'center', fig.pos = "H")
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,fig.height = 4.0, fig.width = 7, fig.align = 'center')
 ```
 
 ```{r , echo=F,results='hide', collapse=TRUE, include=FALSE}
 suppressPackageStartupMessages(library(knitr))
-suppressPackageStartupMessages(library(captioner))
 suppressPackageStartupMessages(library(formatR))
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(Matrix))
@@ -47,34 +26,24 @@ suppressPackageStartupMessages(library(kableExtra))
 suppressPackageStartupMessages(library(boot))
 suppressPackageStartupMessages(library(Stat2Data))
 suppressPackageStartupMessages(library(mosaicData))
-table_nums <- captioner::captioner(prefix = "Table:")
 ```
 
 \begin{large}
 \underline{\textbf{Problem 1:}}
 \end{large}
 
-(a) 
-We begin by importing the data and carrying out some descriptive analyses.
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65), fig.height=3.1, fig.align='center', fig.cap="\\label{fig:figs}Scatterplot Matrix"}
+```{r echo=TRUE, results='hide', collapse=TRUE,,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #Importing the Data
 datahw4 <- read.csv("D:/Vtech/Regression and ANOVA/PS4/datahw4.txt", sep="")
+#Scatterplot Matrix and Boxplot
 pairs(datahw4)
-```
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65), fig.height=3.1, fig.align='center', fig.cap="\\label{fig:figs}Boxplots"}
 par(mfrow = c(1,3))
 boxplot(datahw4$Y, xlab = "Y")
 boxplot(datahw4$X1, xlab = "X1")
 boxplot(datahw4$X2, xlab = "X2")
 ```
 
-From our charts, we expect the variable X3 to have strong predictive power as levels of Y exceeding a certain value all have X3=1. There does not seem to be a clearly defined linear relationship between Y and either of X1 and X2. We will now fit our model and observe the results.\newline
-
-Note, we do not plot X3 in a box plot as that would not be very meaningful for a binary variable.\newline
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #setting up the linear model
 X <- cbind(rep(x = 1,52), datahw4$X1, datahw4$X2, datahw4$X3)
 y <- datahw4$Y
@@ -102,87 +71,37 @@ anv_mat[2,5]<- ""
 anv_mat[1,6]<- round(1-pf(as.numeric(anv_mat[1,5]), anv_mat[1,2], anv_mat[2,2]),4)
 anv_mat[2,6]<- ""
 rsq <- anv_mat[1,3]/(t(y - mean(y))%*%(y - mean(y)))
-tbl_anv <- (kable(anv_mat, caption = "ANOVA Table", booktabs = FALSE))
-tbl_anv <- kable_styling(tbl_anv, position = "center", latex_options = c("HOLD_position"))
+tbl_anv <- (kable(anv_mat))
+tbl_anv <- kable_styling(tbl_anv, position = "center")
 tbl_anv <- column_spec(tbl_anv,1, border_left = T)
 tbl_anv <- column_spec(tbl_anv,6, border_right = T)
 ```
 
-```{r table, echo=F, include=T}
-tbl_anv
-```
-
-Estimated Regression Function:
-
-$$Y_{i} = \hat\beta_{0} + \hat\beta_{1}X_{1}  + \hat\beta_{2}X_{2} + \hat\beta_{3}X_{3}$$
-\begin{center}
-
-$Y_{i}$ = `r round(beta[1],3)` + `r round(beta[2],3)`$X_{1}$  + `r round(beta[3],3)`$X_{2}$ + `r round(beta[4],3)`$X_{3}$
-\end{center}
-
-Here, we interpret our Beta's as follows:
-
-$\hat\beta_1$: The number of additional labor hours required/added when we have a unit increase in the number of cases shipped ($X_1$), while holding the indirect costs of the total labor hours as a percentage ($X_2$), and whether or not the week has a holiday (X3), constant.
-
-$\hat\beta_2$: The number of additional labor hours required/added when we have a unit increase in the indirect costs of the total labor hours as a percentage ($X_2$), while holding the number of cases shipped ($X_1$) and whether or not the week has a holiday (X3), constant.
-
-$\hat\beta_3$: The number of additional labor hours required/added when we have a holiday in the week ($X_3$), while holding the number of cases shipped ($X_1$) and the indirect costs of the total labor hours as a percentage ($X_2$), constant.\newpage
-
-(b)
-
-The below residual box plot helps us understand how our residuals are distributed. We see that the distrubution of the residuals seems to show no skewness. we observe no outliers and the medin seems to be close to the mean which is always zero.
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65), fig.align='center', fig.cap="Residual Boxplot"}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #Residual boxplot
-par(mfrow = c(1,1))
 boxplot(res_vec, xlab = "Residuals")
 ```
 
-(c)
-Our Normal QQ plot shows that we may have a violation of the assumption of normality of the residuals , as the distribution of the residuals seems to have thick tails. There does not seem to be a linear or polynomial relationship between the residuals and any of our covariates, but we may have a problem of non-constant variance, given the residual plot with X3. We notice that some residuals seem to be far off from the linear relationship with the observed response variable Y, we will probably want to investigate these points further.
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65), fig.align='center', fig.cap="Scatter and Normal Prob Plots"}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 par(mfrow = c(2,3))
+#Residual plots
 plot(datahw4$Y,res_vec, xlab = "Y", ylab = "Residuals")
 plot(datahw4$X1,res_vec, xlab = "X1", ylab = "Residuals")
 plot(datahw4$X2,res_vec, xlab = "X2", ylab = "Residuals")
 plot(datahw4$X3,res_vec, xlab = "X3", ylab = "Residuals")
 plot(datahw4$X1*datahw4$X2,res_vec, xlab = "X1 x X2", ylab = "Residuals")
+#Normal QQ plot for the residuals
 qqnorm(res_vec, ylab="Residuals")
 qqline(res_vec)
 ```
 
-(d) 
-Now we prepare a timeplot of the residuals
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE, fig.height=4, fig.align='center', fig.cap=paste("Timeplot of Residuals")}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Residual Time Plot
 plot(c(1:n), res_vec, xlab = "Time", ylab = "Residuals")
 abline(h=0)
 ```
-From the time-plot, the residuals do not seem to show any time dependence.\newline
 
-(e) 
-Now we conduct a Brown-Forsythe test for constant variance Where the hypotheses are:
-\vspace{0.2cm}
-$$
-H_{0}: constant\;variance
-$$
-
-$$
-H_{a}: non-constant\;variance
-$$
-
-And our BF test statistic is:
-\vspace{0.2cm}
-$$
-t_{BF} = \frac{\bar d_{1} - \bar d_{2}}{s.\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}
-$$
-$$
-s^2 = \frac{\sum_i(d_{i1} - \bar d_{1})^2+\sum_i(d_{i2} - \bar d_{2})^2}{n-p-1}
-$$
-
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #The Brown-forsythe test for constant variance
 res_mat <- data.frame(cbind(y,X,y_hat,res_vec))
 res_mat <- arrange(res_mat, y_hat)
@@ -205,53 +124,28 @@ tbf <- (mean(dg1) - mean(dg2))/(sqrt(sbf)*sqrt(1/ng1 + 1/ng2))
 bftstatp <- pt(abs(tbf),n-length(xtxi[,1]), lower.tail = F)*2
 ```
 
-The Brown-Forsythe test provides evidence against non-constant variance, where we observe a p-value of `r round(bftstatp,4)` which supports the null hypothesis of constant variance if we set our type I error to a value of $\alpha=0.01$; therefore we will assume that the constant variance assumption holds.\newline
-
-(f) 
-To test whether there is a regression relation, I will apply five tests: 3 individual t-tests, testing that each of the slope coefficients is not equal to zero; 1 F-test to test that not all coefficients are equal to zero; 1 ANoVA linear lack of fit test to test whether a linear structure is appropriate.
-
-We begin with the t-tests:
-
-$$
-H_{0}: \hat\beta_{1} = 0\\
-$$
-$$
-H_{a}: \hat\beta_{1} \neq 0\\
-$$
-$$
-reject \; H_{0} \;if \quad\lvert t^{*} \rvert \;>\;  t_{n-2,\;\alpha/2}\\
-$$
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #t-test for linear model slope coefficient for Beta1
 t <- as.numeric(beta[2])/(SEbeta[2])
 tvcrit <- qt(0.975,n-length(xtxi[,1]))
 tstatp <- round(pt(abs(t),df=n-length(xtxi[,1]), lower.tail = F)*2,5)
 ```
-\vspace{0.2cm}
-Our t-test produces a t-statistic equal to `r t`, which is greater than the critical t-value at $\alpha=0.05$ which is equal to `r tvcrit`, therefore we reject our null hypothesis of no existence of a linear relationship between number of cases shipped and labor hours.
 
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #t-test for linear model slope coefficient for Beta2
 t <- as.numeric(beta[3])/(SEbeta[3])
 tvcrit <- qt(0.975,n-length(xtxi[,1]))
 tstatp <- round(pt(abs(t),df=n-length(xtxi[,1]), lower.tail = F)*2,5)
 ```
-\vspace{0.2cm}
-Our t-test produces a t-statistic equal to `r t`, which is less than the critical t-value at $\alpha=0.05$ which is equal to `r tvcrit`, therefore we  fail to reject our null hypothesis of no existence of a linear relationship between the indirect costs of the total labor hours as a percentage and labor hours.
 
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #t-test for linear model slope coefficient for Beta3
 t <- as.numeric(beta[4])/(SEbeta[4])
 tvcrit <- qt(0.975,n-length(xtxi[,1]))
 tstatp <- round(pt(abs(t),df=n-length(xtxi[,1]), lower.tail = F)*2,5)
 ```
-\vspace{0.2cm}
-Our t-test produces a t-statistic equal to `r t`, which is greater than the critical t-value at $\alpha=0.05$ which is equal to `r tvcrit`, therefore we reject our null hypothesis of no existence of a linear relationship between whether there is a holiday within the week and labor hours.
 
-Next, we construct and check the ANOVA table:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #ANOVA table for linear regression
 anv_mat<-data.frame(matrix(NA, nrow = 2, ncol = 6))
 names(anv_mat) <- c("", "Df", "Sum Sq", "Mean Sq", "F-Value", "Pr(>F)")
@@ -267,31 +161,14 @@ anv_mat[1,5]<- round(anv_mat[1,4]/anv_mat[2,4],3)
 anv_mat[2,5]<- ""
 anv_mat[1,6]<- round(1-pf(as.numeric(anv_mat[1,5]), anv_mat[1,2], anv_mat[2,2]),4)
 anv_mat[2,6]<- ""
-tbl_anv <- (kable(anv_mat, caption = "ANOVA Table", booktabs = FALSE))
-tbl_anv <- kable_styling(tbl_anv, position = "center", latex_options = c("HOLD_position"))
+tbl_anv <- (kable(anv_mat))
+tbl_anv <- kable_styling(tbl_anv, position = "center")
 tbl_anv <- column_spec(tbl_anv,1, border_left = T)
 tbl_anv <- column_spec(tbl_anv,6, border_right = T)
 ```
-```{r echo=F, include=T}
-tbl_anv
-```
-\vspace{0.2cm}
-We observe that the F-statistic is associated with a p-value very close to zero, which supports the existence of a linear relationship between our covariates and our response variable based on our hypotheses below:
-\vspace{0.2cm}
-$$
-H_{0}: c\hat\beta = 0   \\
-$$
-$$
-H_{a}: c\hat\beta \neq 0   \\
-$$
-$$
-reject \;H_{0} \;if \;\;F^{*} >  F_{1,\;n-p-1}  \\
-$$
 
-(g) 
-Now we apply the Bonferroni adjustment to the confidence interval to obtain the family-wise confidence intervals:
 
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #family confidence intervals, Bonferroni adjusted
 tv<-qt((1-(0.05/(2*(length(xtxi[,1])-1)))),n-length(xtxi[,1]))
 cilow.beta0<-beta[1]-tv*SEbeta[1]
@@ -312,25 +189,14 @@ cnfint[2,3] <- ciupp.beta2
 cnfint[1,4] <- cilow.beta3
 cnfint[2,4] <- ciupp.beta3
 colnames(cnfint) <- c("b0", "b1", "b2", "b3")
-tbl_anv <- (kable(cnfint, caption = "Family-wise Confidence Intervals", booktabs = FALSE))
-tbl_anv <- kable_styling(tbl_anv, position = "center", latex_options = c("HOLD_position"))
+tbl_anv <- (kable(cnfint))
+tbl_anv <- kable_styling(tbl_anv, position = "center")
 tbl_anv <- column_spec(tbl_anv,1, border_left = T)
 tbl_anv <- column_spec(tbl_anv,4, border_right = T)
 ```
 
-The table below displays the Bonferroni adjusted confidence intervals:
-
-```{r echo=F, include=T}
-tbl_anv
-```
-
-We observe that zero is in the confidence interval for $\hat\beta_{2}$ which would imply that the coefficient for $X_{2}$ could be zero. \newline
-
-(h) 
-Next, we will obtain the analysis of variance table that decomposes the regression sum of squares into extra sums of squares associated with X1; with X3, given X1; and with X2, given X1 and X3:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
-#ANOVA table for linear regression
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#ANOVA table for extra sum of squares
 extss_mat<-data.frame(matrix(NA, nrow = 2, ncol = 5))
 names(extss_mat) <- c("", "df.R - df.F", "Extra Sum Sq", "F-Value", "Pr(>F)")
 extss_mat[1,1]<-"Total Model"
@@ -404,37 +270,15 @@ extss_mat[3,5]<- round(1-pf(as.numeric(extss_mat[3,4]), extss_mat[3,2], dfb0b1b3
 extss_mat[4,5]<- round(1-pf(as.numeric(extss_mat[4,4]), extss_mat[4,2], dfb0b1b2b3),4)
 extss_mat[5,5]<- ""
 
-tbl_extss <- (kable(extss_mat, caption = "Extra Sum of Squares ANOVA Table", booktabs = FALSE))
-tbl_extss <- kable_styling(tbl_extss, position = "center", latex_options = c("HOLD_position"))
+tbl_extss <- (kable(extss_mat))
+tbl_extss <- kable_styling(tbl_extss, position = "center")
 tbl_extss <- column_spec(tbl_extss,1, border_left = T)
 tbl_extss <- column_spec(tbl_extss,5, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_extss
-```
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Calculating Coefficients of Determination
 
-(i) 
-From our previous construction of the extra sum of squares ANOVA we observe that:
-
-$$
-F^{*} = \frac{SSRes(X_{1}, X_{2}) - SSRes(X_{1}, X_{2}, X_{3})/((n-2)-(n-4))}{SSRes(X_{1}, X_{2}, X_{3})/(n-4)}  = 0.33 \quad\sim F_{2,\;48} 
-$$
-
-And our hypotheses are:
-
-$$
-H_{0}: \beta_{2} = 0
-$$
-$$
-H_{a}:  \beta_{2} \neq 0
-$$
-
-The associated p-value with an F-statistic of 0.33 is 0.57, therefore we fail to reject the null hypothesis at $\alpha=0.05$.\newline
-
-(j)
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #Rsquared
 rsq_mat<-data.frame(matrix(NA, nrow = 6, ncol = 1))
 rownames(rsq_mat) <- c("X1", "X2", "X1,X2", "X1|X2", "X2|X1", "X1,X2,X3")
@@ -443,17 +287,17 @@ colnames(rsq_mat) <- c("R.sq")
 #Rsq for b1 model
 xtxi<-solve(t(X[,1:2])%*%X[,1:2])
 beta <- xtxi%*%t(X[,1:2])%*%y
-rsq_b0b1 <- 1-(t(y-X[,1:2]%*%beta)%*%(y-X[,1:2]%*%beta))/(t(y-mean(y))%*%(y-mean(y)))
+rsq_b0b1 <- (t(y-X[,1:2]%*%beta)%*%(y-X[,1:2]%*%beta))/(t(y-mean(y))%*%(y-mean(y)))
 
 #Rsq for b2 model
 xtxi<-solve(t(X[,c(1,3)])%*%X[,c(1,3)])
 beta <- xtxi%*%t(X[,c(1,3)])%*%y
-rsq_b0b2 <- 1-(t(y-X[,c(1,3)]%*%beta)%*%(y-X[,c(1,3)]%*%beta))/(t(y-mean(y))%*%(y-mean(y)))
+rsq_b0b2 <- (t(y-X[,c(1,3)]%*%beta)%*%(y-X[,c(1,3)]%*%beta))/(t(y-mean(y))%*%(y-mean(y)))
 
 #Rsq for b1,b2 model
 xtxi<-solve(t(X[,1:3])%*%X[,1:3])
 beta <- xtxi%*%t(X[,1:3])%*%y
-rsq_b0b1b2 <- 1-(t(y-X[,1:3]%*%beta)%*%(y-X[,1:3]%*%beta))/(t(y-mean(y))%*%(y-mean(y)))
+rsq_b0b1b2 <- (t(y-X[,1:3]%*%beta)%*%(y-X[,1:3]%*%beta))/(t(y-mean(y))%*%(y-mean(y)))
 
 #Rsq for b1|b2 model
 xtxi<-solve(t(X[,c(1,2,3)])%*%X[,c(1,2,3)])
@@ -471,20 +315,13 @@ rsq_mat[4,1]<- rsq_b1cb2
 rsq_mat[5,1]<- rsq_b2cb1
 rsq_mat[6,1]<- rsq
 
-tbl_rsq <- (kable(rsq_mat, caption = "Coefficients of Determination", booktabs = FALSE))
-tbl_rsq <- kable_styling(tbl_rsq, position = "center", latex_options = c("HOLD_position"))
+tbl_rsq <- (kable(rsq_mat))
+tbl_rsq <- kable_styling(tbl_rsq, position = "center")
 tbl_rsq <- column_spec(tbl_rsq,1, border_left = T)
 tbl_rsq <- column_spec(tbl_rsq,2, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_rsq
-```
-
-(k) 
-Fitting the standardized regression model:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #setting up the standardized linear model
 X <- cbind(((1/sqrt(n-1))*(datahw4$X1-mean(datahw4$X1))/sd(datahw4$X1)), ((1/sqrt(n-1))*(datahw4$X2-mean(datahw4$X2))/sd(datahw4$X2)), ((1/sqrt(n-1))*(datahw4$X3-mean(datahw4$X3))/sd(datahw4$X3)))
 y <- ((1/sqrt(n-1))*(datahw4$Y-mean(datahw4$Y))/sd(datahw4$Y))
@@ -511,27 +348,15 @@ anv_mat[2,5]<- ""
 anv_mat[1,6]<- round(1-pf(as.numeric(anv_mat[1,5]), anv_mat[1,2], anv_mat[2,2]),4)
 anv_mat[2,6]<- ""
 rsq <- anv_mat[1,3]/(t(y - mean(y))%*%(y - mean(y)))
-tbl_anv <- (kable(anv_mat, caption = "ANOVA Table", booktabs = FALSE))
-tbl_anv <- kable_styling(tbl_anv, position = "center", latex_options = c("HOLD_position"))
+tbl_anv <- (kable(anv_mat))
+tbl_anv <- kable_styling(tbl_anv, position = "center")
 tbl_anv <- column_spec(tbl_anv,1, border_left = T)
 tbl_anv <- column_spec(tbl_anv,6, border_right = T)
 ```
 
-Estimated Regression Function:
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Computing coefficients of partial determination between all pairs of predictor variables
 
-$$Y_{i}^{*}  = \hat\beta_{1}X_{1}^{*}  + \hat\beta_{2}X_{2}^{*}  + \hat\beta_{3}X_{3}^{*} $$
-\begin{center}
-$Y_{i}^{*} $ = `r round(beta[1],3)`$X_{1}^{*} $ + `r round(beta[2],3)`$X_{2}^{*} $  + `r round(beta[3],3)`$X_{3}^{*} $ 
-\end{center}
-
-```{r echo=F, include=T}
-tbl_anv
-```
-
-(l) 
-Coefficients of partial determination between all pairs of predictor variables:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #Rsquared
 rssp_mat<-data.frame(matrix(NA, nrow = 3, ncol = 1))
 rownames(rssp_mat) <- c("X1|X2,X3", "X2|X1,X3", "X3|X1,X2")
@@ -566,28 +391,14 @@ rssp_mat[1,1]<- rsqp_b1cb2b3
 rssp_mat[2,1]<- rsqp_b2cb1b3
 rssp_mat[3,1]<- rsqp_b3cb1b2
 
-tbl_rssp <- (kable(rssp_mat, caption = "Coefficients of Determination", booktabs = FALSE))
-tbl_rssp <- kable_styling(tbl_rssp, position = "center", latex_options = c("HOLD_position"))
+tbl_rssp <- (kable(rssp_mat))
+tbl_rssp <- kable_styling(tbl_rssp, position = "center")
 tbl_rssp <- column_spec(tbl_rssp,1, border_left = T)
 tbl_rssp <- column_spec(tbl_rssp,2, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_rssp
-```
-
-For the resulting standardized coefficients, we know the following identity holds:
-
-$$
-\beta_{k} = (\frac{S_{y}}{S_{k}})\beta_{K\;std}
-$$
-Therefore the standardized coefficients are simply scaled versions of the original coefficients; and thus we can consider the standardized regression coeffecients to reflect the effect of one predictor variable when the others are held constant.\newline
-
-(m) 
-Using the above identity to transform our coefficients, we obtain the following result:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
-#setting up the linear model
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Transforming the standardized coefficients back to their original form
 X <- cbind(rep(x = 1,52), datahw4$X1, datahw4$X2, datahw4$X3)
 y <- datahw4$Y
 xtxi<-solve(t(X)%*%X)
@@ -609,63 +420,48 @@ beta_comp[3,1] <- beta[3]*(sd(y)/sd(X[,4]))
 
 names(beta_comp) <- c("Beta Transformed", "Beta Original")
 
-tbl_beta_comp <- (kable(beta_comp, caption = "Transformed vs Original Betas", booktabs = FALSE))
-tbl_beta_comp <- kable_styling(tbl_beta_comp, position = "center", latex_options = c("HOLD_position"))
+tbl_beta_comp <- (kable(beta_comp))
+tbl_beta_comp <- kable_styling(tbl_beta_comp, position = "center")
 tbl_beta_comp <- column_spec(tbl_beta_comp,1, border_left = T)
 tbl_beta_comp <- column_spec(tbl_beta_comp,2, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_beta_comp
-```
-
-(n) 
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#SSR Comparison
 ssr_comp <- data.frame(matrix(NA, nrow = 2, ncol = 1))
 rownames(ssr_comp) <- c("SSR X1", "SSR X1|X2")
 ssr_comp[2,1] <- (rss_b0b2 - rss_b0b1b2)
 ssr_comp[1,1] <- (rss_b0 - rss_b0b1)
 names(ssr_comp) <- c("")
-tbl_ssr_comp <- (kable(ssr_comp, caption = "SSR Comparison", booktabs = FALSE))
-tbl_ssr_comp <- kable_styling(tbl_ssr_comp, position = "center", latex_options = c("HOLD_position"))
+tbl_ssr_comp <- (kable(ssr_comp))
+tbl_ssr_comp <- kable_styling(tbl_ssr_comp, position = "center")
 tbl_ssr_comp <- column_spec(tbl_ssr_comp,1, border_left = T)
 tbl_ssr_comp <- column_spec(tbl_ssr_comp,2, border_right = T)
 ```
-
-```{r echo=F, include=T}
-tbl_ssr_comp
-```
-
-We observe that the two figures are not equal here, however the difference is not substantial.\newpage
 
 \begin{large}
 \underline{\textbf{Problem 2:}}
 \end{large}
 
 (a) 
-
-The scatterplots suggest that there may be a linear relationship between our response variable Y, and all our predictor variables.
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65), fig.height=3.1, fig.align='center', fig.cap="\\label{fig:figs}Scatterplot Matrix"}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
 #Importing the Data
 data3hw4 <- read.csv("D:/Vtech/Regression and ANOVA/PS4/data3hw4.txt", sep="")
+#Scatterplot Matrix
 pairs(data3hw4)
 ```
 
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Correlation Matric
 corr_mat <- cor(data3hw4[,2:5])
-tbl_corr <- (kable(corr_mat, caption = "Correlation Matrix", booktabs = FALSE))
-tbl_corr <- kable_styling(tbl_corr, position = "center", latex_options = c("HOLD_position"))
+tbl_corr <- (kable(corr_mat))
+tbl_corr <- kable_styling(tbl_corr, position = "center")
 tbl_corr <- column_spec(tbl_corr,1, border_left = T)
 tbl_corr <- column_spec(tbl_corr,5, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_corr
-```
-
-However, we notice from the correlation matrix that we have a strong correlation between X3 and X4, as well as a medium strength correlation between X2 and X3, both of which may lead to problems of multicollinearity. To check whether we have serious multicollinearity we compute the variance inflation factor as follows:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Estimating the Variance Inflation Factors
 lmfitx1 <- lm(X1~X4+X2+X3, data = data3hw4)
 lmfitx2 <- lm(X2~X1+X4+X3, data = data3hw4)
 lmfitx3 <- lm(X3~X1+X2+X4, data = data3hw4)
@@ -683,52 +479,34 @@ vif_mat[3,1] <- VIF_X3
 vif_mat[4,1] <- VIF_X4
 rownames(vif_mat) <- c("VIF X1", "VIF X2", "VIF X3", "VIF X4")
 colnames(vif_mat) <- c("")
-tbl_vif <- (kable(vif_mat, caption = "VIF Table", booktabs = FALSE))
-tbl_vif <- kable_styling(tbl_vif, position = "center", latex_options = c("HOLD_position"))
+tbl_vif <- (kable(vif_mat))
+tbl_vif <- kable_styling(tbl_vif, position = "center")
 tbl_vif <- column_spec(tbl_vif,1, border_left = T)
 tbl_vif <- column_spec(tbl_vif,2, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_vif
-```
-
-Since all our variance inflation factors are less than 10, we conclude that we do not have a severe multicollinearity problem.
-
-(b) 
-After fitting the multiple linear model, at first glance, it seems that the covariate X2 should not be icluded in the model.
-
 ```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Fitting the full multiple linear model
 lmfit2 <- lm(Y~., data = data3hw4)
 summary(lmfit2)
 ```
 
-(c) 
-Now we will use adjusted $R^{2}$ to find the four best subset regression models:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Doing variable selection using the all possible subsets approach based on adjusted R-sqaured
 library(leaps)
 b<-regsubsets(Y~.,data=data3hw4, nbest = 16)
 rs<-summary((b))
 rsort <- arrange(data.frame(cbind(rs$which, rs$adjr)), desc(rs$adjr2))
 names(rsort) <- c("Intercept", "X1", "X2", "X3", "X4", "R.sq.adj")
 subs_mat <- head(rsort,4)
-tbl_subs <- (kable(subs_mat, caption = "Best Subsets", booktabs = FALSE))
-tbl_subs <- kable_styling(tbl_subs, position = "center", latex_options = c("HOLD_position"))
+tbl_subs <- (kable(subs_mat))
+tbl_subs <- kable_styling(tbl_subs, position = "center")
 tbl_subs <- column_spec(tbl_subs,1, border_left = T)
 tbl_subs <- column_spec(tbl_subs,6, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_subs
-```
-
-Based on $R^{2}$-adjusted of all possible models, we conclude that the models with the best fit are the ones displayed above.
-
-(d) 
-We could also check the following criteria: Mallow's C_{p}, Akaike's Information Criterion (AIC), Schwarz Bayesian Information Criterion (BIC), or the Prediction Sum of Squares Criterion (PRESS). The first three of these criteria offer ways of rewarding a model for producing smaller residuals (i.e: accounting for a greater portion of the variation in the model), and penalize the model for incorporating many parameters. The fial method, on the other hand (PRESS), is based on the model's predictive power for one observation that is left out, with the process repeated for some (usually all) individual observations.
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Computing Adjusted R-squared, Mallow's Cp, AIC, BIC and displaying results in a table
 library(leaps)
 b<-regsubsets(Y~.,data=data3hw4, nbest = 16)
 rs<-summary((b))
@@ -738,73 +516,48 @@ rsort <- arrange(data.frame(cbind(rs$which, rs$adjr, rs$cp, (rs$bic-(rsnew$rsum)
 rsort$rsum <- NULL
 names(rsort) <- c("Intercept", "X1", "X2", "X3", "X4", "R.sq.adj", "Cp", "AIC", "BIC")
 subs_mat <- head(rsort,4)
-tbl_subs <- (kable(subs_mat, caption = "Best Subsets with Multiple Criteria", booktabs = FALSE))
-tbl_subs <- kable_styling(tbl_subs, position = "center", latex_options = c("HOLD_position"))
+tbl_subs <- (kable(subs_mat))
+tbl_subs <- kable_styling(tbl_subs, position = "center")
 tbl_subs <- column_spec(tbl_subs,1, border_left = T)
 tbl_subs <- column_spec(tbl_subs,9, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_subs
-```
-
-(e) 
-Using backward elimination to find the best subset of predictor variables to predict job proficiency, we find:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Applying Backward elimination and saving results to a table 
 b<-regsubsets(Y~.,data=data3hw4, nbest = 16, method = "backward")
 rs<-summary((b))
 rsort <- arrange(data.frame(cbind(rs$which, rs$adjr)), desc(rs$adjr2))
 names(rsort) <- c("Intercept", "X1", "X2", "X3", "X4", "R.sq.adj")
 subs_mat <- head(rsort,1)
-tbl_subs <- (kable(subs_mat, caption = "Backward Elimination Best Subsets", booktabs = FALSE))
-tbl_subs <- kable_styling(tbl_subs, position = "center", latex_options = c("HOLD_position"))
+tbl_subs <- (kable(subs_mat))
+tbl_subs <- kable_styling(tbl_subs, position = "center")
 tbl_subs <- column_spec(tbl_subs,1, border_left = T)
 tbl_subs <- column_spec(tbl_subs,6, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_subs
-```
-
-(f) 
-Using forward selection to find the best subset of predictor variables to predict job proficiency, we find:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Applying Forward Selection and saving results to a table 
 b<-regsubsets(Y~.,data=data3hw4, nbest = 16, method = "forward")
 rs<-summary((b))
 rsort <- arrange(data.frame(cbind(rs$which, rs$adjr)), desc(rs$adjr2))
 names(rsort) <- c("Intercept", "X1", "X2", "X3", "X4", "R.sq.adj")
 subs_mat <- head(rsort,1)
-tbl_subs <- (kable(subs_mat, caption = "Forward Selection Best Subsets", booktabs = FALSE))
-tbl_subs <- kable_styling(tbl_subs, position = "center", latex_options = c("HOLD_position"))
+tbl_subs <- (kable(subs_mat))
+tbl_subs <- kable_styling(tbl_subs, position = "center")
 tbl_subs <- column_spec(tbl_subs,1, border_left = T)
 tbl_subs <- column_spec(tbl_subs,6, border_right = T)
 ```
 
-```{r echo=F, include=T}
-tbl_subs
-```
-
-(g) 
-Using stepwose regression to find the best subset of predictor variables to predict job proficiency, we find:
-
-```{r echo=FALSE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+```{r echo=TRUE,tidy.opts=list(width.cutoff=65),tidy=TRUE}
+#Applying Stepwise regression and saving results to a table 
 b<-regsubsets(Y~.,data=data3hw4, nbest = 16, method = "seqrep")
 rs<-summary((b))
 rsort <- arrange(data.frame(cbind(rs$which, rs$adjr)), desc(rs$adjr2))
 names(rsort) <- c("Intercept", "X1", "X2", "X3", "X4", "R.sq.adj")
 subs_mat <- head(rsort,1)
-tbl_subs <- (kable(subs_mat, caption = "Stepwise Regression Best Subsets", booktabs = FALSE))
-tbl_subs <- kable_styling(tbl_subs, position = "center", latex_options = c("HOLD_position"))
+tbl_subs <- (kable(subs_mat))
+tbl_subs <- kable_styling(tbl_subs, position = "center")
 tbl_subs <- column_spec(tbl_subs,1, border_left = T)
 tbl_subs <- column_spec(tbl_subs,6, border_right = T)
 ```
-
-```{r echo=F, include=T}
-tbl_subs
-```
-
-(h) 
-we observe that in this specific case, all three methods, backward elimination, forward selection, and stepwise regression, have all produced the same result in terms of which model is the best in terms of adjusted R^{2}.
 
